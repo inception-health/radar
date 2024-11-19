@@ -304,6 +304,7 @@ const Factory = function () {
   var sheet
 
   self.build = function () {
+    console.log('building....')
     if (!isValidConfig()) {
       plotError(new InvalidConfigError(ExceptionMessages.INVALID_CONFIG))
       return
@@ -327,6 +328,8 @@ const Factory = function () {
     const domainName = DomainName(window.location.search.substring(1))
 
     const paramId = getDocumentOrSheetId()
+    console.log('paramId', paramId)
+    console.log('domainName', domainName)
     if (paramId && paramId.endsWith('.csv')) {
       sheet = CSVDocument(paramId)
       sheet.init().build()
@@ -337,23 +340,13 @@ const Factory = function () {
       const sheetName = getSheetName()
       sheet = GoogleSheet(paramId, sheetName)
       sheet.init().build()
+    } else if (paramId) {
+      plotLoading()
+      sheet = GoogleSheet(getDocumentOrSheetId())
+      sheet.init().build()
+
+      setDocumentTitle()
     } else {
-      if (!featureToggles.UIRefresh2022) {
-        document.body.style.opacity = '1'
-        document.body.innerHTML = ''
-        const content = d3.select('body').append('div').attr('class', 'input-sheet')
-        plotLogo(content)
-        const bannerText =
-          '<div><h1>Build your own radar</h1><p>Once you\'ve <a href ="https://www.thoughtworks.com/radar/byor">created your Radar</a>, you can use this service' +
-          ' to generate an <br />interactive version of your Technology Radar. Not sure how? <a href ="https://www.thoughtworks.com/radar/byor">Read this first.</a></p></div>'
-
-        plotBanner(content, bannerText)
-
-        plotForm(content)
-
-        plotFooter(content)
-      }
-
       setDocumentTitle()
     }
   }
@@ -362,28 +355,11 @@ const Factory = function () {
 }
 
 function setDocumentTitle() {
-  document.title = 'Build your own Radar'
+  document.title = 'Welcome to Inception Health Technology Radar'
 }
 
-function plotLoading(content) {
-  if (!featureToggles.UIRefresh2022) {
-    document.body.style.opacity = '1'
-    document.body.innerHTML = ''
-    content = d3.select('body').append('div').attr('class', 'loading').append('div').attr('class', 'input-sheet')
-
-    setDocumentTitle()
-
-    plotLogo(content)
-
-    var bannerText =
-      '<h1>Building your radar...</h1><p>Your Technology Radar will be available in just a few seconds</p>'
-    plotBanner(content, bannerText)
-    plotFooter(content)
-  } else {
-    document.querySelector('.helper-description > p').style.display = 'none'
-    document.querySelector('.input-sheet-form').style.display = 'none'
-    document.querySelector('.helper-description .loader-text').style.display = 'block'
-  }
+function plotLoading() {
+  document.querySelector('.helper-description .loader-text').style.display = 'block'
 }
 
 function plotLogo(content) {
@@ -394,45 +370,17 @@ function plotLogo(content) {
 }
 
 function plotFooter(content) {
-  content
-    .append('div')
-    .attr('id', 'footer')
-    .append('div')
-    .attr('class', 'footer-content')
-    .append('p')
-    .html(
-      'Powered by <a href="https://www.thoughtworks.com"> Thoughtworks</a>. ' +
-        'By using this service you agree to <a href="https://www.thoughtworks.com/radar/tos">Thoughtworks\' terms of use</a>. ' +
-        'You also agree to our <a href="https://www.thoughtworks.com/privacy-policy">privacy policy</a>, which describes how we will gather, use and protect any personal data contained in your public Google Sheet. ' +
-        'This software is <a href="https://github.com/thoughtworks/build-your-own-radar">open source</a> and available for download and self-hosting.',
-    )
+  content.append('div').attr('id', 'footer').append('div').attr('class', 'footer-content').append('p')
+  // .html(
+  //   'Powered by <a href="https://www.thoughtworks.com"> Thoughtworks</a>. ' +
+  //     'By using this service you agree to <a href="https://www.thoughtworks.com/radar/tos">Thoughtworks\' terms of use</a>. ' +
+  //     'You also agree to our <a href="https://www.thoughtworks.com/privacy-policy">privacy policy</a>, which describes how we will gather, use and protect any personal data contained in your public Google Sheet. ' +
+  //     'This software is <a href="https://github.com/thoughtworks/build-your-own-radar">open source</a> and available for download and self-hosting.',
+  // )
 }
 
 function plotBanner(content, text) {
   content.append('div').attr('class', 'input-sheet__banner').html(text)
-}
-
-function plotForm(content) {
-  content
-    .append('div')
-    .attr('class', 'input-sheet__form')
-    .append('p')
-    .html(
-      '<strong>Enter the URL of your <a href="https://www.thoughtworks.com/radar/byor" target="_blank">Google Sheet, CSV or JSON</a> file below…</strong>',
-    )
-
-  var form = content.select('.input-sheet__form').append('form').attr('method', 'get')
-
-  form
-    .append('input')
-    .attr('type', 'text')
-    .attr('name', 'sheetId')
-    .attr('placeholder', 'e.g. https://docs.google.com/spreadsheets/d/<sheetid> or hosted CSV/JSON file')
-    .attr('required', '')
-
-  form.append('button').attr('type', 'submit').append('a').attr('class', 'button').text('Build my radar')
-
-  form.append('p').html("<a href='https://www.thoughtworks.com/radar/byor#guide'>Need help?</a>")
 }
 
 function plotErrorMessage(exception, fileType) {
